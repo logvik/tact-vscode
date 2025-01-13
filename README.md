@@ -17,6 +17,16 @@ This extension provides:
 * Code completion for all contracts / libraries in the current file and all referenced imports
 * Formatting
 
+# Installation
+To install the Tact language support extension for Visual Studio Code, follow these steps:
+```bash
+git clone https://github.com/tact-lang/tact-vscode
+cd vscode-tact
+yarn install
+code .
+```
+Run the extension: Press F5 to start debugging the extension. This will open a new instance of Visual Studio Code with the Tact extension enabled.
+
 # Instructions
 
 ## Code completion
