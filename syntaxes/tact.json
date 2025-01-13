@@ -84,7 +84,7 @@
     },
 
     "todo": {
-      "match": "(?i)\\b(FIXME|TODO|CHANGED|XXX|IDEA|HACK|NOTE|REVIEW|NB|BUG)\\b(?-i)",
+      "match": "\\b(FIXME|TODO|CHANGED|XXX|IDEA|HACK|NOTE|REVIEW|NB|BUG)\\b",
       "name": "keyword.comment.todo.tact"
     },
 

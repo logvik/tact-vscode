@@ -22,7 +22,7 @@ function genericPrint(path: any, options: any, print: any) {
 
   const node = path.getValue();
 
-  if (node === null) {
+  if (node === null || node == undefined) {
     return '';
   }
 

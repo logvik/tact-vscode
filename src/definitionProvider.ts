@@ -46,6 +46,9 @@ export class TactDefinitionProvider {
     } catch(e) {
       result = tactparse.getPrevResult();
     }
+    if (typeof(result) == "undefined") {
+      return undefined;
+    }
     const element = this.findElementByOffset(result.body, offset);
     if (element === undefined) { return undefined; }
 
@@ -74,7 +77,7 @@ export class TactDefinitionProvider {
               document,
               result.body,
               isBlock.name,
-              'InterfaceStatement',
+              'TraitStatement',
               contracts,
             );
           }
@@ -95,8 +98,8 @@ export class TactDefinitionProvider {
         }
         break;
       }
-      case 'InterfaceStatement': {
-        // find definition in interface body recursively
+      case 'TraitStatement': {
+        // find definition in trait body recursively
         const statement = this.findElementByOffset(element.body, offset);
         if (statement !== undefined) {
           return this.provideDefinitionInStatement(
@@ -244,9 +247,9 @@ export class TactDefinitionProvider {
   }
 
   /**
-   * Provide definition for a callee which can be a function, struct, or contract
+   * Provide definition for a callee which can be a function, struct, message or contract
    *
-   * e.g. f(x), Struct(x), Contract(address)
+   * e.g. f(x), Struct, Message, Contract(address)
    *
    * @private
    * @param {ContractCollection} contracts collection of contracts resolved by current contract
@@ -322,6 +325,9 @@ export class TactDefinitionProvider {
         result = tactparse.parse(contract.code, contract.absolutePath);
       } catch(e) {
         result = tactparse.getPrevResult();
+      }
+      if (typeof(result) == "undefined") {
+        continue;
       }
       const elements =  Array.prototype.concat.apply([],
         result.body.map((element: any) => {
@@ -428,7 +434,7 @@ export class TactDefinitionProvider {
   /**
    * Find the first statement by name and type in current document and its direct imports.
    *
-   * This is used to find either Contract or Library statement to define `is`, `using`, or member accessor.
+   * This is used to find either Contract or Trait statement to define `with`, or member accessor.
    *
    * @private
    * @param {vscode.TextDocument} document document where statements belong, used to convert offset to position
@@ -461,6 +467,9 @@ export class TactDefinitionProvider {
         statements = tactparse.parse(importContract?.code ?? "", importContract?.absolutePath ?? "").body;
       } catch(e) {
         statements = tactparse.getPrevResult();
+      }
+      if (typeof(statements) == "undefined") {
+        continue;
       }
       location = this.findStatementLocationByNameType(document, statements, name, type);
     }

@@ -275,7 +275,7 @@ DecimalLiteral
       return { type: "Literal", value: BigInt(text().replaceAll('_', '')), start: location().start.offset, end: location().end.offset };
     }
   / "." DecimalDigit+ ExponentPart? {
-      return { type: "Literal", value: BigInt(text().replaceAll('_', '')), start: location().start.offset, end: location().end.offset };
+      return { type: "Literal", value: bigInt(text().replaceAll('_', '')), start: location().start.offset, end: location().end.offset };
     }
   / DecimalIntegerLiteral ExponentPart? {
       return { type: "Literal", value: BigInt(text().replaceAll('_', '')), start: location().start.offset, end: location().end.offset };
@@ -1158,7 +1158,7 @@ VariableStatement
     }
 
 VariableDeclarationTuple
-  = "("Comma* __ head:VariableDeclarationNoInit tail:(Comma+ VariableDeclarationNoInit)* __ Comma* ")" init:(__ Initialiser) {
+  = "("Comma* __ head:VariableDeclarationNoInit tail:(Comma+ VariableDeclarationNoInit)* __ Comma* ")" init:(__ Initializer) {
       return {
         declarations: buildList(head, tail, 1),
         init: extractOptional(init, 1)
@@ -1182,7 +1182,7 @@ VariableDeclarationList
     }
 
 VariableDeclaration
-  = id:(Identifier / "(" Identifier ")") __ ":" __ type:Type isoptional:"?"? __ init:(__ Initialiser)? {
+  = id:(Identifier / "(" Identifier ")") __ ":" __ type:Type isoptional:"?"? __ init:(__ Initializer)? {
       return {
         type: "VariableDeclarator",
         typePrimitive: type,
@@ -1194,7 +1194,7 @@ VariableDeclaration
       };
     }
 
-Initialiser
+Initializer
   = "=" !"=" __ expression:AssignmentExpression { return expression; }
 
 EmptyStatement
@@ -1256,9 +1256,9 @@ CatchStatement
 
 IfStatement
   = IfToken __ "("? __ test:Expression __ ")"? __
-    consequent:Statement __
-    ElseToken __ "{"? __
-    alternate:Statement __ "}"? __
+    consequent:FunctionBody? __
+    ElseToken __
+    alternate:FunctionBody? __
     {
       return {
         type:       "IfStatement",
@@ -1270,7 +1270,8 @@ IfStatement
       };
     }
   / IfToken __ "("? __ test:Expression __ ")"? __
-    consequent:Statement {
+    consequent:FunctionBody? __
+    {
       return {
         type:       "IfStatement",
         test:       test,
@@ -1345,15 +1346,15 @@ GlobalSymbol
 
 IterationStatement
   = DoToken __
-    body:Statement __
+    body:FunctionBody __
     UntilToken __ "(" __ test:Expression __ ")" EOS
     { return { type: "DoWhileStatement", body: body, test: test, start: location().start.offset, end: location().end.offset }; }
   / WhileToken __ "(" __ test:Expression __ ")" __
-    body:Statement
+    body:FunctionBody
     { return { type: "WhileStatement", test: test, body: body, start: location().start.offset, end: location().end.offset }; }
   / RepeatToken __
     "(" __ count:(Nd __)? __ IdentifierName? __ ")" __
-    body:Statement
+    body:FunctionBody
     {
       return {
         type:   "RepeatStatement",
@@ -1365,7 +1366,7 @@ IterationStatement
     }
   / ForeachToken __
     "(" __ key:IdentifierName __ "," __ value:IdentifierName __ "in" __ mapName:Type __ ")" __
-    body:Statement
+    body:FunctionBody
     {
       return {
         type:   "ForeachStatement",

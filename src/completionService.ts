@@ -149,14 +149,14 @@ export class CompletionService {
         return completionItem;
     }
 
-    public createInterfaceCompletionItem(contractName: string | undefined): CompletionItem {
+    public createTraitCompletionItem(contractName: string | undefined): CompletionItem {
         if (contractName == undefined) {
             return CompletionItem.create("");
         }
         const completionItem =  CompletionItem.create(contractName);
         completionItem.kind = CompletionItemKind.Interface;
         completionItem.insertText = contractName;
-        completionItem.detail = '( Interface : ' + contractName + ')';
+        completionItem.detail = '( Trait : ' + contractName + ')';
         return completionItem;
     }
   
@@ -243,8 +243,8 @@ export class CompletionService {
                     completionItems.push(this.createContractCompletionItem(x.name, "Contract"));
                 }
 
-                if(x.contractType === "InterfaceStatement") {
-                    completionItems.push(this.createInterfaceCompletionItem(x.name));
+                if(x.contractType === "TraitStatement") {
+                    completionItems.push(this.createTraitCompletionItem(x.name));
                 }
             })
 
@@ -397,7 +397,7 @@ export class CompletionService {
         } else {
             let foundContract = allContracts.find(x => x.name === type?.name);
             if (foundContract !== undefined) {
-                foundContract.initialiseExtendContracts(allContracts);
+                foundContract.initializeExtendContracts(allContracts);
                 this.addContractCompletionItems(foundContract, completionItems);
             }
         }
@@ -525,7 +525,7 @@ export class CompletionService {
         } else {
             let foundContract = allContracts.find(x => x.name === type?.name);
             if (foundContract !== undefined) {
-                foundContract.initialiseExtendContracts(allContracts);
+                foundContract.initializeExtendContracts(allContracts);
                 this.findDotCompletionItemsForContract(autocompleteByDot, completionItems, allContracts, foundContract);
             }
         }
@@ -637,7 +637,7 @@ export function GetCompletionKeywords(): CompletionItem[] {
     const completionItems = [];
     const keywords = [ "as", "asm", "break", "continue", "initOf",
         "init", "receive", "bounced", "delete", "do", "else", "error", "false", "repeat", "from", 
-        "fun", "get", "if", "try", "catch", "with", "import", "interface", "message", "map", "new", 
+        "fun", "get", "if", "try", "catch", "with", "import", "trait", "message", "map", "new", 
         "null", "return", "struct", "super", "self", "throw", "true", "while"];
     keywords.forEach(unit => {
         const completionItem =  CompletionItem.create(unit);

@@ -9,7 +9,7 @@ export class ParsedCode {
     public name: string | undefined;
     public location: vscode.Location | undefined;
 
-    protected isElementedSelected(element:any, offset:number | undefined): boolean {
+    protected isElementSelected(element:any, offset:number | undefined): boolean {
         if (offset == undefined) {
             return false;
         }
@@ -26,13 +26,13 @@ export class ParsedCode {
 export class DeclarationType extends ParsedCode {
     static create(literal: any): DeclarationType {
         const declarationType = new DeclarationType();
-        declarationType.initialise(literal);
+        declarationType.initialize(literal);
         return declarationType;
     }
     public isArray: boolean | undefined;
     public isMapping: boolean | undefined;
 
-    public initialise(literal: any) {
+    public initialize(literal: any) {
         this.element = literal;
         if (literal.members !== undefined && literal.members.length > 0) {
             this.name = literal.members[0];    
@@ -58,20 +58,20 @@ export class Contract2 extends ParsedCode {
     public extendsContracts: Contract2[] = [];
     public extendsContractNames: string[] = [];
 
-    public initialise(element:any) {
+    public initialize(element:any) {
         this.element = element;
         this.name = element.name;
         this.location; //
         this.contractType = element.type;
-        this.initialiseChildren();                
+        this.initializeChildren();
     }
 
-    public initialiseExtendContracts(contracts:Contract2[]) {
+    public initializeExtendContracts(contracts:Contract2[]) {
         if (this.extendsContracts.length === 0 && this.extendsContractNames.length > 0) {
             this.extendsContractNames.forEach(contractName => {
                let contractMatched =  contracts.find(x => x.name === contractName);
                if (contractMatched !== undefined) {
-                    contractMatched.initialiseExtendContracts(contracts);
+                    contractMatched.initializeExtendContracts(contracts);
                     this.extendsContracts.push(contractMatched);
                }
             });
@@ -128,56 +128,38 @@ export class Contract2 extends ParsedCode {
         return returnItems;
     }
 
-    public initialiseChildren(){
+    public initializeChildren(){
         if (this.element.is !== undefined) {
             this.element.is.forEach((isElement: any) => { 
                 this.extendsContractNames.push(isElement.name);
             });
         }
+
         if (this.element.body !== undefined) {
             this.element.body.forEach((contractElement: any) => {
                 if (contractElement.type === 'FunctionDeclaration') {
                     const functionContract = new Function();
-                    functionContract.initialise(contractElement, this);
-                    this.functions.push(functionContract);
-                }
-/*
-                if (contractElement.type === 'InitDeclaration') {
-                    const functionContract = new Function();
-                    functionContract.initialise(contractElement, this);
+                    functionContract.initialize(contractElement, this);
                     this.functions.push(functionContract);
                 }
 
-                if (contractElement.type === 'ReceiveDeclaration') {
-                    const functionContract = new Function();
-                    functionContract.initialise(contractElement, this);
-                    this.functions.push(functionContract);
-                }
-
-                if (contractElement.type === 'OnBounceDeclaration') {
-                    const functionContract = new Function();
-                    functionContract.initialise(contractElement, this);
-                    this.functions.push(functionContract);
-                }
-*/
                 if (contractElement.type === 'StateVariableDeclaration') {
                     let stateVariable = new StateVariable();
-                    stateVariable.initialise(contractElement, this);
+                    stateVariable.initialize(contractElement, this);
                     this.stateVariables.push(stateVariable);
                 }
 
                 if (contractElement.type === 'StructDeclaration') {
                     let struct = new Struct();
-                    struct.initialise(contractElement, this);
+                    struct.initialize(contractElement, this);
                     this.structs.push(struct);
                 }
 
                 if (contractElement.type === 'MessageStatement') {
                     let message = new Message();
-                    message.initialise(contractElement, this);
+                    message.initialize(contractElement, this);
                     this.messages.push(message);
                 }
-
             });
         }
     }
@@ -189,16 +171,16 @@ export class Function extends ParsedCode {
     public variablesInScope: FunctionVariable[] = [];
     public contract:  Contract2 | undefined;
 
-    public initialise(element:any, contract:Contract2) {
+    public initialize(element:any, contract:Contract2) {
         this.contract = contract;
         this.element = element;
         this.name = element.name;
         this.location; //
-        this.initialiseParamters();                
+        this.initializeParameters();                
     }
     
-    public initialiseParamters(){
-        this.input = Parameter.extractParameters(this.element.params);
+    public initializeParameters(){
+        this.input  = Parameter.extractParameters(this.element.params);
         this.output = Parameter.extractParameters(this.element.returnParams);
     }
 
@@ -210,7 +192,7 @@ export class Function extends ParsedCode {
 
     public findVariableDeclarationsInInnerScope(offset:number | undefined, block:any) {
         if(block !== undefined) {
-            if(this.isElementedSelected(block, offset)) {
+            if(this.isElementSelected(block, offset)) {
                 if(block.body !== undefined) {
                     block.body.forEach((blockBodyElement: any) => {
                         if (blockBodyElement.type === 'ExpressionStatement') {
@@ -219,14 +201,14 @@ export class Function extends ParsedCode {
                         }
 
                         if (blockBodyElement.type === 'ForStatement') {
-                            if(this.isElementedSelected(blockBodyElement, offset)) {
+                            if(this.isElementSelected(blockBodyElement, offset)) {
                                 this.addVariableInScopeFromExpression(blockBodyElement.init);
                                 this.findVariableDeclarationsInInnerScope(offset, blockBodyElement.body);
                             }
                         }
 
                         if (blockBodyElement.type === 'IfStatement') {
-                            if(this.isElementedSelected(blockBodyElement, offset)) {
+                            if(this.isElementSelected(blockBodyElement, offset)) {
                                 this.findVariableDeclarationsInInnerScope(offset, blockBodyElement.consequent);
                                 this.findVariableDeclarationsInInnerScope(offset, blockBodyElement.alternate);
                             }
@@ -249,7 +231,7 @@ export class Function extends ParsedCode {
             declarationStatement = expression;
         }
 
-        if (declarationStatement !== undefined) {
+        if (declarationStatement !== undefined && declarationStatement !== "" && declarationStatement !== null) {
             let variable = new FunctionVariable();
             variable.element = declarationStatement;
             variable.name = declarationStatement.name;
@@ -264,7 +246,7 @@ export class Message extends ParsedCode {
     public variables: MessageVariable[] = [];
     public contract:  Contract2 | undefined;
 
-    public initialise(element:any, contract:Contract2) {
+    public initialize(element:any, contract:Contract2) {
         this.contract = contract;
         this.element = element;
         this.name = element.name;
@@ -289,7 +271,7 @@ export class Struct extends ParsedCode {
     public variables:     StructVariable[] = [];
     public contract:  Contract2 | undefined;
 
-    public initialise(element:any, contract:Contract2) {
+    public initialize(element:any, contract:Contract2) {
         this.contract = contract;
         this.element = element;
         this.name = element.name;
@@ -327,7 +309,7 @@ export class FunctionVariable extends Variable {
 }
 
 export class StateVariable extends Variable {
-    public initialise(element:any, contract:Contract2) {
+    public initialize(element:any, contract:Contract2) {
         this.contract = contract;
         this.element = element;
         this.name = element.name;
@@ -363,7 +345,10 @@ export class Parameter extends Variable {
 }
 
 export class DocumentContract {
-    public allContracts: Contract2[] = []; 
+    public allContracts: Contract2[] = [];
+    public allStructs: Struct[] = [];
+    public allMessages: Message[] = [];
+    public allFunctions: Function[] = [];
     public selectedContract: Contract2 | undefined;
 }
 
@@ -376,7 +361,7 @@ export class TactCodeWalker {
   }
 
   public getAllContracts(document: TextDocument, position: vscode.Position): DocumentContract {
-        let documentContract:DocumentContract = new DocumentContract();
+        let documentContract: DocumentContract = new DocumentContract();
         const documentText = document.getText();
         const contractPath = URI.parse(document.uri).fsPath;
         const contracts = new ContractCollection();
@@ -390,19 +375,22 @@ export class TactCodeWalker {
         documentContract = this.getSelectedContracts(documentText, offset, position.line);
  
         contracts.contracts.forEach(contractItem => {
-            if (contractItem !== contract) {
-                let contractsParsed = this.getContracts(contractItem.code);
-                documentContract.allContracts = documentContract.allContracts.concat(contractsParsed);
+            if (contractItem.absolutePath !== contract.absolutePath) {
+                documentContract.allContracts = documentContract.allContracts.concat(this.getContracts(contractItem.code));
+                documentContract.allStructs   = documentContract.allStructs.concat(this.getStructs(contractItem.code));
+                documentContract.allMessages  = documentContract.allMessages.concat(this.getMessages(contractItem.code));
+                documentContract.allFunctions = documentContract.allFunctions.concat(this.getFunctions(contractItem.code));
             } else {
                 if (documentContract.selectedContract !== undefined ) {
                     documentContract.selectedContract.messages = this.getMessages(contractItem.code);
                     documentContract.selectedContract.structs = this.getStructs(contractItem.code);
+                    documentContract.selectedContract.functions = this.getFunctions(contractItem.code);
                 }
             }
         });
 
         if (documentContract.selectedContract !== undefined ) {
-            documentContract.selectedContract.initialiseExtendContracts(documentContract.allContracts); 
+            documentContract.selectedContract.initializeExtendContracts(documentContract.allContracts); 
         }
 
         return documentContract;
@@ -415,14 +403,14 @@ export class TactCodeWalker {
   }
 
   public getSelectedContracts(documentText: string, offset: number, line: number): DocumentContract {
-    let contracts : DocumentContract = new DocumentContract();
+    let contracts: DocumentContract = new DocumentContract();
     try {
         const result = this.tactparser.parse(documentText, "");
         let selectedElement = this.findElementByOffset(result.body, offset);
         result.body.forEach((element: any) => {       
-            if (element.type === 'ContractStatement' || element.type == 'InterfaceStatement') {
+            if (element.type === 'ContractStatement' || element.type == 'TraitStatement') {
                 var contract = new Contract2();
-                contract.initialise(element);
+                contract.initialize(element);
                 if (selectedElement === element) {
                     contracts.selectedContract = contract;
                 }
@@ -442,13 +430,13 @@ export class TactCodeWalker {
   }
 
   public getContracts(documentText: string): Contract2[] {
-    let contracts : Contract2[] = [];
+    let contracts: Contract2[] = [];
     try {
         const result = this.tactparser.parse(documentText, "");
         result.body.forEach((element: any) => {
-            if (element.type === 'ContractStatement' || element.type == 'InterfaceStatement') {
+            if (element.type === 'ContractStatement' || element.type == 'TraitStatement') {
                 var contract = new Contract2();
-                contract.initialise(element);
+                contract.initialize(element);
                 contracts.push(contract);
             }
         });
@@ -456,9 +444,9 @@ export class TactCodeWalker {
         // console.log(error.message);
         const result = this.tactparser.getPrevResult();
         result.body.forEach((element: any) => {
-            if (element.type === 'ContractStatement' || element.type == 'InterfaceStatement') {
+            if (element.type === 'ContractStatement' || element.type == 'TraitStatement') {
                 var contract = new Contract2();
-                contract.initialise(element);
+                contract.initialize(element);
                 contracts.push(contract);
             }
         });
@@ -467,14 +455,23 @@ export class TactCodeWalker {
   }
 
   public getStructs(documentText: string): Struct[] {
-    let structs : Struct[] = [];
+    let structs: Struct[] = [];
     try {
         const result = this.tactparser.parse(documentText, "");
         result.body.forEach((element: any) => {
             if (element.type === 'StructDeclaration') {
                 var struct = new Struct();
-                struct.initialise(element, new Contract2());
+                struct.initialize(element, new Contract2());
                 structs.push(struct);
+            }
+            if (element.type == 'ContractStatement') {
+                element.body.forEach((element: any) => {
+                    if (element.type == 'StructDeclaration') {
+                        var struct = new Struct();
+                        struct.initialize(element, new Contract2());
+                        structs.push(struct);
+                    }
+                });
             }
         });
     } catch (error) {
@@ -483,8 +480,17 @@ export class TactCodeWalker {
         result.body.forEach((element: any) => {
             if (element.type === 'StructDeclaration') {
                 var struct = new Struct();
-                struct.initialise(element, new Contract2());
+                struct.initialize(element, new Contract2());
                 structs.push(struct);
+            }
+            if (element.type == 'ContractStatement') {
+                element.body.forEach((element: any) => {
+                    if (element.type == 'StructDeclaration') {
+                        var struct = new Struct();
+                        struct.initialize(element, new Contract2());
+                        structs.push(struct);
+                    }
+                });
             }
         });
     }
@@ -492,27 +498,88 @@ export class TactCodeWalker {
   }
 
   public getMessages(documentText: string): Message[] {
-    let messages : Message[] = [];
+    let messages: Message[] = [];
     try {
         const result = this.tactparser.parse(documentText, "");
         result.body.forEach((element: any) => {
-            if (element.type === 'MessageStatement') {
+            if (element.type === 'MessageDeclaration') {
                 var message = new Message();
-                message.initialise(element, new Contract2());
+                message.initialize(element, new Contract2());
                 messages.push(message);
+            }
+            if (element.type == 'ContractStatement') {
+                element.body.forEach((element: any) => {
+                    if (element.type == 'MessageDeclaration') {
+                        var message = new Message();
+                        message.initialize(element, new Contract2());
+                        messages.push(message);
+                    }
+                });
             }
         });
     } catch (error) {
         // console.log(error.message);
         const result = this.tactparser.getPrevResult();
         result.body.forEach((element: any) => {
-            if (element.type === 'MessageStatement') {
+            if (element.type === 'MessageDeclaration') {
                 var message = new Message();
-                message.initialise(element, new Contract2());
+                message.initialize(element, new Contract2());
                 messages.push(message);
+            }
+            if (element.type == 'ContractStatement') {
+                element.body.forEach((element: any) => {
+                    if (element.type == 'MessageDeclaration') {
+                        var message = new Message();
+                        message.initialize(element, new Contract2());
+                        messages.push(message);
+                    }
+                });
             }
         });
     }
     return messages;
+  }
+
+  public getFunctions(documentText: string): Function[] {
+    let functions: Function[] = [];
+    try {
+        const result = this.tactparser.parse(documentText, "");
+        result.body.forEach((element: any) => {
+            if (element.type == 'FunctionDeclaration') {
+                const functionElem = new Function();
+                functionElem.initialize(element, new Contract2());
+                functions.push(functionElem);
+            }
+            if (element.type == 'ContractStatement') {
+                element.body.forEach((element: any) => {
+                    if (element.type == 'FunctionDeclaration') {
+                        const functionElem = new Function();
+                        functionElem.initialize(element, new Contract2());
+                        functions.push(functionElem);
+                    }
+                });
+            }
+        });
+    } catch (error) {
+        // console.log(error.message);
+        const result = this.tactparser.getPrevResult();
+        result.body.forEach((element: any) => {
+            if (element.type == 'FunctionDeclaration') {
+                const functionElem = new Function();
+                functionElem.initialize(element, new Contract2());
+                functions.push(functionElem);
+            }
+            if (element.type == 'ContractStatement') {
+                element.body.forEach((element: any) => {
+                    if (element.type == 'FunctionDeclaration') {
+                        const functionElem = new Function();
+                        functionElem.initialize(element, new Contract2());
+                        functions.push(functionElem);
+                    }
+                });
+            }
+        });
+    }
+    return functions;
   }
 }

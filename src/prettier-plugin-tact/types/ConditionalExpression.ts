@@ -4,14 +4,14 @@ const { group, indent, line } = doc.builders;
 const Conditional = {
   print: ({ path, print }: any) =>
     group([
-      path.call(print, 'condition'),
+      path.call(print, 'test'),
       indent([
         line,
         '? ',
-        path.call(print, 'trueExpression'),
-        line,
+        path.call(print, 'consequent'),
+        line, 
         ': ',
-        path.call(print, 'falseExpression')
+        path.call(print, 'alternate')
       ])
     ])
 };

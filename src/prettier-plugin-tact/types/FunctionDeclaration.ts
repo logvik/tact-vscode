@@ -58,7 +58,9 @@ const FunctionDefinition = {
             ')',
           ])
           : '') : '',
-        node.is_extends ? 'extends ' : null ?? node.is_abstract ? 'abstract ' : null ?? '',
+        node.is_extends ? 'extends ' : "",
+        node.is_abstract ? 'abstract ' : "",
+        node.is_mutates ? 'mutates ' : "",
         functionName(node, options, path, print),
         '(',
         parameters('params', node, path, print, options),
