@@ -1,3 +1,8 @@
+> !NOTE
+> 
+> This extension has been deprecated 
+> in favor of https://marketplace.visualstudio.com/items?itemName=tonstudio.vscode-tact
+
 # Tact language support for Visual Studio code
 
 <div align="center">

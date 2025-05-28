@@ -1,10 +1,10 @@
 {
   "name": "tact-lang-vscode",
   "displayName": "Tact Language Support for TON blockchain",
-  "description": "Tact language (for .tact file) extension to use together with Tact compiler for Visual Studio Code to develop smart contract for TON blockchain",
+  "description": "(deprecated) Tact language (for .tact file) extension to use together with Tact compiler for Visual Studio Code to develop smart contract for TON blockchain",
   "publisher": "KonVik",
   "icon": "icons/logo.png",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "keywords": [
     "tact",
     "blockchain",
